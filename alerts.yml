@@ -1,0 +1,22 @@
+groups:
+  - name: todo-api-alerts
+    rules:
+      - alert: TodoApiDown
+        expr: up{job="todo-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TODO API не отвечает"
+          description: "Prometheus не получает метрики от api больше одной минуты."
+
+      - alert: TodoApiHigh5xxRate
+        expr: |
+          sum(rate(todo_api_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(todo_api_requests_total[5m])), 0.001) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "У TODO API повышена доля ошибок 5xx"
+          description: "Доля ответов 5xx превышает 5% в течение двух минут."
